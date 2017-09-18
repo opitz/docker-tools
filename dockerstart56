@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# script to run Moodle 3.2 using Docker image with centos7 / Apache / PHP 5.6 and mapped moodledata/filedir
+# m.opitz@qmul.ac.uk | 2017-09-12
+
+path_to_workbench="/home/opitz/workbench/"
+
+echo "--------------------------------------------------------------------------"
+
+if [ $# -eq 0 ]
+  then
+    echo "====> ERROR! missing Docker container name! - aborting..."
+    echo "====> use: dockerstart56 <container_name>"
+    echo "====> or: dockerstart56 -l <container_name>"
+    exit 1
+fi
+
+if [ $# -eq 1 ]
+	then
+	container_name=$1
+fi
+
+if [ $# -gt 1 ]
+	then
+	the_option=$1
+	if [[ ${the_option:0:1} != "-" ]]
+		then
+		container_name=$1
+	else
+		container_name=$2
+		if [[ $1 == *"l"* ]]
+			then
+			locally=true
+		else
+			echo "ERROR! Unknown option $1 - aborting..!"
+			exit 1
+		fi
+	fi
+fi
+
+echo "container name =" $container_name
+
+# forcefully remove any existing Docker container with that name
+docker rm -f $container_name >/dev/null 2>/dev/null
+
+if [ $locally ]
+	then
+	echo "... with local Moodle data"
+	docker run -d \
+	-v $path_to_workbench$container_name:/var/www/html \
+	-p 80:80 -p 443:443 \
+	--add-host db_host:161.23.44.17 \
+	--name $container_name \
+	centos7_php56_httpd
+else
+	echo "... with mapped Moodle data"
+	docker run -d \
+	-v $path_to_workbench$container_name:/var/www/html \
+	-v /media/opitz/m\!oodle-data/filedir:/var/moodledata/filedir:ro \
+	-p 80:80 -p 443:443 \
+	--add-host db_host:161.23.44.17 \
+	--name $container_name \
+	centos7_php56_httpd
+fi
+
+#	docker run -d \
+#	-v /home/opitz/workbench/moodle32:/var/www/html \
+#	-v /media/opitz/m\!oodle-data/filedir:/var/moodledata/filedir:ro \
+#	-p 80:80 -p 443:443 \
+#	--add-host db_host:161.23.44.17 \
+#	--name moodle32 \
+#	centos7_php56_httpd
+

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# script to remove all Docker containers and images
+# m.opitz@qmul.ac.uk | 2017-09-01
+
+echo "ATTENTION!! This will stop and remove ALL!! existing Docker containers and images!"
+read -p "Is this what you want? [y/N]" doit
+if [ "${doit:0:1}" != "y" ] && [ "${doit:0:1}" != "Y" ]
+    then
+    echo "====> OK, aborting..."
+    exit 1
+fi
+
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -aq)
+
+echo "ALL Docker containers and images removed!"
+
